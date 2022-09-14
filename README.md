@@ -22,7 +22,7 @@ General results are as follows:
 ## Contents
 The work is written in R markdown. The contents are as folows:
 
-The data (power yields and weather sensors) -
+The data (power yields and weather sensors for two plants) -
 ```
 Powerplant Data
 ```
