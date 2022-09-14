@@ -8,7 +8,7 @@ This repository gives an analysis of 34 days of solar power plant data, as found
 
 The goal is to investigate the data to answer the following questions:
 
-1) Can we predict the power generation given a weather prediction?
+1) Can we predict daily power yield given a weather prediction?
 2) Can we identify underperforming power inverters?
 3) Can we predict when a power inverter will underperform?
 
