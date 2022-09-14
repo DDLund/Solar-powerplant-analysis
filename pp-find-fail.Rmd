@@ -1,0 +1,355 @@
+---
+title: "Powerplant Finding Faileurs"
+author: "Daniel Lundstrom"
+output:
+  pdf_document: default
+  html_document: default
+  word_document: default
+---
+
+Here we identify low power outputs, attempt to predict low power times given recent power reading of an inverter,
+and do some investigation of correlations of inverter low power performance between different inverters.
+Our findings suggest that some inverters are highly correlating, so that they give low power readings together.
+Findings also suggest that low power performance for an inverter cannot be predicted by recent power readings.
+
+```{r covariance matrix}
+p1.f = p1nz
+
+# create labels for easy reading o correlation table
+
+p1.f$a.res = rep(0,length(p1.f$DAY))
+p1.f$b.res = rep(0,length(p1.f$DAY))
+p1.f$c.res = rep(0,length(p1.f$DAY))
+p1.f$d.res = rep(0,length(p1.f$DAY))
+p1.f$e.res = rep(0,length(p1.f$DAY))
+p1.f$f.res = rep(0,length(p1.f$DAY))
+p1.f$g.res = rep(0,length(p1.f$DAY))
+p1.f$h.res = rep(0,length(p1.f$DAY))
+p1.f$i.res = rep(0,length(p1.f$DAY))
+p1.f$j.res = rep(0,length(p1.f$DAY))
+p1.f$k.res = rep(0,length(p1.f$DAY))
+p1.f$l.res = rep(0,length(p1.f$DAY))
+p1.f$m.res = rep(0,length(p1.f$DAY))
+p1.f$n.res = rep(0,length(p1.f$DAY))
+p1.f$o.res = rep(0,length(p1.f$DAY))
+p1.f$p.res = rep(0,length(p1.f$DAY))
+p1.f$q.res = rep(0,length(p1.f$DAY))
+p1.f$r.res = rep(0,length(p1.f$DAY))
+p1.f$s.res = rep(0,length(p1.f$DAY))
+p1.f$t.res = rep(0,length(p1.f$DAY))
+p1.f$u.res = rep(0,length(p1.f$DAY))
+p1.f$v.res = rep(0,length(p1.f$DAY))
+
+# for each inverter, get residuals of performance from prediction (residual = performance - prediction)
+  for (i in 1:22){
+    data = p1nz[,1:5];
+    data$DC_POWER = p1nz[,i+5];          
+    mod=lm(DC_POWER~poly(IRRADIATION,2)+AMBIENT_TEMPERATURE,data=data);
+    p1.f[,27+i] = data$DC_POWER - predict(mod,data);
+  }
+
+# calculate correlations to find if different inverters generally over/under perform together.
+  p1.f = p1.f[,28:49];
+  cor(p1.f, y=p1.f, use="all.obs")
+  
+#generally positive correlation. Some are highly correlated (e.g. a & i), while some are uncorrelated (e.g. f & m).
+
+```
+
+```{r multiple source faileur}
+
+# Identify times when an inverter gives low power yield based on irradiation measurements.
+# check to see if this happens on particular days, times of day, irradiation measures,
+# or ambient temp measurements.
+
+# low power generally happens around mid to high temp, with most happening at mid temp.
+# low power days are sporadic and vary wildly. Sometimes 0 low-power instances occur, sometimes 40, in a day
+# low power occurs in a roughly bell-shaped curve, with abnormally high spikes at times (roughly) 590, 650, and 830
+# low power occurs in relation to irradiation in a roughly bell-shaped curve, with the center at 0.7 irraiation
+# simultaneous low-power from multiple inverters roughly occurs in 2s and 3s
+
+low.day = NULL;
+low.time = NULL;
+low.pow = NULL;
+
+low.pow.time = NULL;
+low.pow.temp = NULL;
+low.pow.fail.pairs = NULL;
+low.pow.day = NULL;
+low.pow.irradiation = NULL;
+
+p1.f = p1
+
+p1.f$numfail = rep(0,length(p1.f$DAY))
+p1.f$afail = rep(0,length(p1.f$DAY))
+p1.f$bfail = rep(0,length(p1.f$DAY))
+p1.f$cfail = rep(0,length(p1.f$DAY))
+p1.f$dfail = rep(0,length(p1.f$DAY))
+p1.f$efail = rep(0,length(p1.f$DAY))
+p1.f$ffail = rep(0,length(p1.f$DAY))
+p1.f$gfail = rep(0,length(p1.f$DAY))
+p1.f$hfail = rep(0,length(p1.f$DAY))
+p1.f$ifail = rep(0,length(p1.f$DAY))
+p1.f$jfail = rep(0,length(p1.f$DAY))
+p1.f$kfail = rep(0,length(p1.f$DAY))
+p1.f$lfail = rep(0,length(p1.f$DAY))
+p1.f$mfail = rep(0,length(p1.f$DAY))
+p1.f$nfail = rep(0,length(p1.f$DAY))
+p1.f$ofail = rep(0,length(p1.f$DAY))
+p1.f$pfail = rep(0,length(p1.f$DAY))
+p1.f$qfail = rep(0,length(p1.f$DAY))
+p1.f$rfail = rep(0,length(p1.f$DAY))
+p1.f$sfail = rep(0,length(p1.f$DAY))
+p1.f$tfail = rep(0,length(p1.f$DAY))
+p1.f$ufail = rep(0,length(p1.f$DAY))
+p1.f$vfail = rep(0,length(p1.f$DAY))
+
+for (i in 1:22){
+  
+  data = p1[,1:5];
+  data$DC_POWER = p1[,i+5] 
+  z.pow = data$DC_POWER==0;
+  mod=lm(DC_POWER~poly(IRRADIATION,2)+AMBIENT_TEMPERATURE,data=data[!z.pow,]);
+  variance = var(data$DC_POWER[!z.pow]-predict(mod,data[!z.pow,]));
+  sd = sqrt(variance);
+  low.pow = !z.pow & data$DC_POWER < (predict(mod,data)-3*sd)
+  p1.f$numfail[low.pow] <- p1.f$numfail[low.pow] + 1;
+  p1.f[low.pow,28+i] = p1.f[low.pow,28+i] + 1;
+  
+  
+  low.pow.time = c(low.pow.time, data$TIME[low.pow]);
+  low.pow.ambi.temp = c(low.pow.temp, data$AMBIENT_TEMPERATURE[low.pow]);
+  low.pow.mod.temp = c(low.pow.temp, data$MODULE_TEMPERATURE[low.pow]);
+  low.pow.day = c(low.pow.day, data$DAY[low.pow])
+  low.pow.irradiation = c(low.pow.irradiation, data$IRRADIATION[low.pow])
+  
+  
+
+  
+}
+  hist(p1.f$numfail[p1.f$numfail!=0],seq(0,25,1),main="Histogram of Number of Simultanious Low Power Inverters")
+  hist(data$AMBIENT_TEMPERATURE)
+  hist(low.pow.ambi.temp, main="Histogram of AMBIENT_TEMPERATURE during low power")
+  hist(data$MODULE_TEMPERATURE)
+  hist(low.pow.mod.temp, main="Histogram of MODULE_TEMPERATURE during low power")
+  hist(low.pow.day,main = "Histogram of Days where a Low Power Occured", breaks = 1:36);
+  hist(data$TIME[low.pow])
+  hist(low.pow.time,main = "Histogram of Times when a Low Power Occured", breaks = seq(min(data$TIME),max(data$TIME),15));
+  hist(low.pow.irradiation,main = "Histogram of Irradiation when a Low Power Occured");
+  
+  # entries when there were more than 5 low power inverters at one time
+  p1.f[p1.f$numfail>5,c(29:50)]
+  
+  fail.matrix = p1.f[p1.f$numfail>1,29:50]
+  fail.pairs = NULL
+  count = 0;
+  for (i in 1:21){
+    for (j in (i+1):22){
+      count = count +1;
+      fail.pairs$letter1[count] <- LETTERS[i];
+      fail.pairs$letter2[count] <- LETTERS[j];
+      fail.pairs$cofail[count] <- length(fail.matrix[fail.matrix[,i]+fail.matrix[,j] == 2,1]);
+      
+      }
+  }
+  fail.pairs=data.frame(fail.pairs)
+  hist(fail.pairs$cofail,main = "Histogram of Inverter Pairs Experiencing Low Power Simultaniously")
+  
+  
+  p = sum(p1.f$numfail)/length(p1gen$IRRADIATION[p1gen$IRRADIATION>0.4])
+  pbinom(10,choose(22,2),prob = p)
+  
+  #correlation of fail matrix
+  cor(fail.matrix, y=fail.matrix, use="all.obs")
+
+
+```
+
+
+
+
+
+```{r lower power lag 1 & 2 graphs}
+
+# plots low power points, and the two data points temporally preceding the low power point.
+# # green squares are two lags behind, orange triangles are one lag behind.
+
+# it appears that low power moments are not preceded by low power moments.
+
+for (i in 1:22){
+  
+  data = p1gen[p1gen$SOURCE==LETTERS[i],];
+  z.pow = data$DC_POWER==0;
+  mod=lm(DC_POWER~poly(IRRADIATION,2)+AMBIENT_TEMPERATURE,data=data[!z.pow,]);
+  variance = var(data$DC_POWER[!z.pow]-predict(mod,data[!z.pow,]));
+  sd = sqrt(variance);
+  
+  
+  
+  low.pow = !z.pow & data$DC_POWER < (predict(mod,data)-3*sd)
+  lag1 = NULL;
+  lag2 = NULL;
+  lag.count = 0;
+  
+  for (j in 3:length(z.pow)){
+    
+    if(low.pow[j] & !z.pow[j-1] & !z.pow[j-2]){
+      lag.count = lag.count+1;
+      lag1[lag.count] = j-1;
+      lag2[lag.count] = j-2;
+    }
+    
+    
+  }
+  
+  
+  
+  
+  plot(data$IRRADIATION,data$DC_POWER,main = paste("low power time with lag 1 & 2 for SOURCE" ,LETTERS[i]), xlab = 
+         "Irradiation", ylab = "Direct Current Power");
+  points(data$IRRADIATION,predict(mod,data),col="blue",pch=20)
+  points(data$IRRADIATION[low.pow],data$DC_POWER[low.pow],col="red",pch=20)
+  points(data$IRRADIATION[lag1],data$DC_POWER[lag1],col="orange",pch=2)
+  points(data$IRRADIATION[lag2],data$DC_POWER[lag2],col="green",pch=22)
+  
+  
+  
+}
+
+```
+
+
+
+```{r lower power lag 1 & 2 graphs}
+
+# another visualization of low power points, plotting only residuals
+
+for (i in 3:3){
+  
+  data = p1gen[p1gen$SOURCE==LETTERS[i],];
+  z.pow = data$DC_POWER==0;
+  mod=lm(DC_POWER~poly(IRRADIATION,2),data=data[!z.pow,]);
+  variance = var(data$DC_POWER[!z.pow]-predict(mod,data[!z.pow,]));
+  sd = sqrt(variance);
+  
+  
+  
+  low.pow = !z.pow & data$DC_POWER < (predict(mod,data)-3*sd)
+  lag1 = NULL;
+  lag2 = NULL;
+  lag.count = 0;
+  
+  for (j in 3:length(z.pow)){
+    
+    if(low.pow[j] & !z.pow[j-1] & !z.pow[j-2]){
+      lag.count = lag.count+1;
+      lag1[lag.count] = j-1;
+      lag2[lag.count] = j-2;
+    }
+    
+    
+  }
+  
+  
+  residules = data$DC_POWER-predict(mod,data)
+  
+  plot(data$IRRADIATION,residules,main = paste("Residuals and Low Power Points for SOURCE" ,LETTERS[i]), xlab = 
+         "Irradiation", ylab = "Direct Current Power");
+  points(data$IRRADIATION,residules,col="blue",pch=20)
+  points(data$IRRADIATION[low.pow],residules[low.pow],col="red",pch=20)
+  points(data$IRRADIATION[lag1],residules[lag1],col="orange",pch=2)
+  points(data$IRRADIATION[lag2],residules[lag2],col="green",pch=22)
+  
+  
+  
+}
+
+```
+
+
+```{r lower power fitting}
+
+# Attempt to predict a low power moment based on five lag data points. Use Logistic Regression, LDA, QDA, and KNN. No method is effective.
+# Results suggests that low power cannot be predicted from previous yield data.
+
+library(MASS)
+for (i in 3:3){
+  
+  data = p1gen[p1gen$SOURCE==LETTERS[i],];
+  z.pow = data$DC_POWER==0;
+  mod=lm(DC_POWER~poly(IRRADIATION,2),data=data[!z.pow,]);
+  residuals = data$DC_POWER-predict(mod,data);
+  data$lag1 = c(0,residuals[1:(length(data$DC_POWER)-1)]);
+  data$lag2 = c(0,0,residuals[1:(length(data$DC_POWER)-2)]);
+  data$lag3 = c(0,0,0,residuals[1:(length(data$DC_POWER)-3)]);
+  data$lag4 = c(0,0,0,0,residuals[1:(length(data$DC_POWER)-4)]);
+  data$lag5 = c(0,0,0,0,0,residuals[1:(length(data$DC_POWER)-5)]);
+
+  
+  plot(data$IRRADIATION,data$lag1)
+  
+  variance = var(data$DC_POWER[!z.pow]-predict(mod,data[!z.pow,]));
+  sd = sqrt(variance);
+  low.pow = !z.pow & data$DC_POWER < (predict(mod,data)-3*sd) & data$DC_POWER > (predict(mod,data)-7*sd)
+  is.low = rep("NO",length(data$AC_POWER));
+  is.low[low.pow]="YES"
+  data$islow <- as.factor(is.low)
+  
+
+    
+}
+  glm.fits=glm(islow~lag1+lag2+lag3+lag4+lag5+poly(IRRADIATION,2),
+             data=data[data$DC_POWER !=0,],family=binomial);
+  glm.probs=predict(glm.fits,type="response")
+  glm.pred=rep("NO",length(data$DC_POWER))
+  glm.pred[glm.probs>.5]="YES"
+  table(glm.pred,data$islow)
+  mean(glm.pred==data$islow)
+  plot(data$IRRADIATION,data$DC_POWER,main = paste("Logistic Regression Classification of LOW_POW in SOURCE" 
+    ,LETTERS[i]), xlab = "Irradiation", ylab = "Direct Current Power");
+  points(data$IRRADIATION,predict(mod,data),col="blue",pch=20)
+  points(data$IRRADIATION[glm.pred=="YES"],data$DC_POWER[glm.pred=="YES"],col="red",pch=20)
+  
+  lda.fit=lda(islow~lag1+lag2+lag5+poly(IRRADIATION,2),data=data[data$DC_POWER !=0,])
+  lda.pred=predict(lda.fit,data)
+  table(lda.pred$class,data$islow)
+  mean(lda.pred$class==data$islow)
+  plot(data$IRRADIATION,data$DC_POWER,main = paste("lda Classificaiton of LOW_POW in SOURCE" ,LETTERS[i]), xlab = 
+         "Irradiation", ylab = "Direct Current Power");
+  points(data$IRRADIATION,predict(mod,data),col="blue",pch=20)
+  points(data$IRRADIATION[lda.pred$class=="YES"],data$DC_POWER[lda.pred$class=="YES"],col="red",pch=20)
+  
+  qda.fit=qda(islow~lag1+lag2+lag5+poly(IRRADIATION,2),data=data[data$DC_POWER !=0,])
+  qda.pred=predict(qda.fit,data)
+  table(qda.pred$class,data$islow)
+  mean(qda.pred$class==data$islow)
+  plot(data$IRRADIATION,data$DC_POWER,main = paste("qda Classification of LOW_POW in SOURCE" ,LETTERS[i]), xlab = 
+         "Irradiation", ylab = "Direct Current Power");
+  points(data$IRRADIATION,predict(mod,data),col="blue",pch=20)
+  points(data$IRRADIATION[qda.pred$class=="YES"],data$DC_POWER[qda.pred$class=="YES"],col="red",pch=20)
+  
+  
+library(class)
+set.seed(1)
+data=data[data$DC_POWER !=0,]
+knn.pred=knn(data[,10:15],data[,10:15],data$islow,k=3)
+  table(knn.pred,data$islow)
+  mean(knn.pred==data$islow)
+  plot(data$IRRADIATION,data$DC_POWER,main = paste("knn, k=3 Classification of LOW_POW in SOURCE" ,LETTERS[i]), xlab = 
+         "Irradiation", ylab = "Direct Current Power");
+  points(data$IRRADIATION,predict(mod,data),col="blue",pch=20)
+  points(data$IRRADIATION[knn.pred=="YES"],data$DC_POWER[knn.pred=="YES"],col="red",pch=20)
+table(knn.pred,data$islow)
+mean(knn.pred==data$islow)
+  
+
+
+  
+
+  
+  
+  
+
+```
+
+
