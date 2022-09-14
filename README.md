@@ -2,7 +2,7 @@
 
 This repository gives an analysis of 34 days of solar power plant data, as found at:
 
-> [Solar Power Generation Data](https://proceedings.mlr.press/v162/lundstrom22a/lundstrom22a.pdf](https://www.kaggle.com/datasets/anikannal/solar-power-generation-data)
+> [Solar Power Generation Data](https://www.kaggle.com/datasets/anikannal/solar-power-generation-data)
 
 ##Goal and Results
 
