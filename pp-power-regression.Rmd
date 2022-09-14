@@ -14,6 +14,9 @@ or the total plant yield.
 
 We find that irradiation is the fundamental predictor of yield, but ambient
 temperature is correlated with the aspects of the power yield, such as variance.
+We try polynomial, ridge, lasso, and spline fittings, and find that higher power
+fittings regularized methods and splines do not improve greatly on the quadratic
+fitting.
 
 
 ```{r dc vs ac power}
