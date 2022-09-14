@@ -1,0 +1,367 @@
+---
+title: "Powerplant Data Cleaning"
+author: "Daniel Lundstrom"
+output:
+  word_document: default
+  html_document: default
+  pdf_document: default
+---
+
+
+For information on the data set: https://www.kaggle.com/datasets/anikannal/solar-power-generation-data
+
+
+```{r import_data}
+p1gen <- read.csv("Powerplant Data/Plant_1_Generation_Data.csv", header=TRUE)
+
+p1sen <- read.csv("Powerplant Data/Plant_1_Weather_Sensor_Data.csv", header=TRUE)
+
+p2gen <- read.csv("Powerplant Data/Plant_2_Generation_Data.csv", header=TRUE)
+
+p2sen<- read.csv("Powerplant Data/Plant_2_Weather_Sensor_Data.csv", header=TRUE)
+
+```
+
+
+
+```{r data_cleaning}
+
+#p1gen cleaning
+
+library(stringr)
+NEW_DATE <- vector(mode="character", length(p1gen$DATE_TIME));
+NEW_TIME <- vector(mode="character", length(p1gen$DATE_TIME));
+NEW_ID <- vector(mode="character", length(p1gen$DATE_TIME));
+
+p1gen$SOURCE_KEY = as.factor(p1gen$SOURCE_KEY)
+
+for (i in 1:length(levels(p1gen$SOURCE_KEY))){
+  NEW_ID[p1gen$SOURCE_KEY==levels(p1gen$SOURCE_KEY)[i]] = LETTERS[i]; 
+}
+
+p1gen$SOURCE <- as.factor(NEW_ID);
+p1gen$SOURCE_KEY <- NULL;
+  
+for (i in 1:length(p1gen$DATE_TIME)){
+  temp = str_split_fixed(p1gen$DATE_TIME[i]," ",2);
+  NEW_DATE[i] = temp[1];
+  NEW_TIME[i] = temp[2];
+  temp = str_split_fixed(NEW_DATE[i],"-",3);
+  NEW_DATE[i] = as.numeric(temp[1])+31*as.numeric(temp[2])-169;
+  temp = str_split_fixed(NEW_TIME[i],":",2);
+  NEW_TIME[i] = 60*as.numeric(temp[1])+as.numeric(temp[2]);
+}
+
+p1gen$DAY <- as.numeric(NEW_DATE);
+p1gen$TIME <- as.numeric(NEW_TIME);
+p1gen$DATE_TIME <- NULL;
+p1gen$PLANT_ID <- NULL;
+
+
+#p2gen cleaning
+
+NEW_DATE <- vector(mode="character", length(p2gen$DATE_TIME));
+NEW_TIME <- vector(mode="character", length(p2gen$DATE_TIME));
+NEW_ID <- vector(mode="character", length(p2gen$DATE_TIME));
+
+p2gen$SOURCE_KEY = as.factor(p2gen$SOURCE_KEY)
+
+for (i in 1:length(levels(p2gen$SOURCE_KEY))){
+  NEW_ID[p2gen$SOURCE_KEY==levels(p2gen$SOURCE_KEY)[i]] = LETTERS[i]; 
+}
+
+p2gen$SOURCE <- as.factor(NEW_ID);
+p2gen$SOURCE_KEY <- NULL;
+  
+for (i in 1:length(p2gen$DATE_TIME)){
+  temp = str_split_fixed(p2gen$DATE_TIME[i]," ",2);
+  NEW_DATE[i] = temp[1];
+  NEW_TIME[i] = temp[2];
+  temp = str_split_fixed(NEW_DATE[i],"-",3);
+  NEW_DATE[i] = as.numeric(temp[3])+31*as.numeric(temp[2])-169;
+  temp = str_split_fixed(NEW_TIME[i],":",3);
+  NEW_TIME[i] = 60*as.numeric(temp[1])+as.numeric(temp[2]);
+}
+
+p2gen$DAY <- as.numeric(NEW_DATE);
+p2gen$TIME <- as.numeric(NEW_TIME);
+p2gen$DATE_TIME <- NULL;
+p2gen$PLANT_ID <- NULL;
+
+
+#p1sen cleaning
+
+NEW_DATE <- vector(mode="character", length(p1sen$DATE_TIME));
+NEW_TIME <- vector(mode="character", length(p1sen$DATE_TIME));
+  
+for (i in 1:length(p1sen$DATE_TIME)){
+  temp = str_split_fixed(p1sen$DATE_TIME[i]," ",2);
+  NEW_DATE[i] = temp[1];
+  NEW_TIME[i] = temp[2];
+  temp = str_split_fixed(NEW_DATE[i],"-",3);
+  NEW_DATE[i] = as.numeric(temp[3])+31*as.numeric(temp[2])-169;
+  temp = str_split_fixed(NEW_TIME[i],":",3);
+  NEW_TIME[i] = 60*as.numeric(temp[1])+as.numeric(temp[2]);
+}
+
+p1sen$DAY <- as.numeric(NEW_DATE);
+p1sen$TIME <- as.numeric(NEW_TIME);
+p1sen$DATE_TIME <- NULL;
+p1sen$PLANT_ID <- NULL;
+p1sen$SOURCE_KEY <- NULL;
+
+#p2sen cleaning
+
+NEW_DATE <- vector(mode="character", length(p2sen$DATE_TIME));
+NEW_TIME <- vector(mode="character", length(p2sen$DATE_TIME));
+  
+for (i in 1:length(p2sen$DATE_TIME)){
+  temp = str_split_fixed(p2sen$DATE_TIME[i]," ",2);
+  NEW_DATE[i] = temp[1];
+  NEW_TIME[i] = temp[2];
+  temp = str_split_fixed(NEW_DATE[i],"-",3);
+  NEW_DATE[i] = as.numeric(temp[3])+31*as.numeric(temp[2])-169;
+  temp = str_split_fixed(NEW_TIME[i],":",3);
+  NEW_TIME[i] = 60*as.numeric(temp[1])+as.numeric(temp[2]);
+}
+
+p2sen$DAY <- as.numeric(NEW_DATE);
+p2sen$TIME <- as.numeric(NEW_TIME);
+p2sen$DATE_TIME <- NULL;
+p2sen$PLANT_ID <- NULL;
+p2sen$SOURCE_KEY <- NULL;
+
+
+```
+
+
+```{r attach_sensor to p1gen}
+
+#Attach Sensor Data for 1nd generator
+
+AMBIENT_TEMPERATURE <- vector(mode="numeric", length(p1gen$DAY));
+MODULE_TEMPERATURE <- vector(mode="numeric", length(p1gen$DAY));
+IRRADIATION <- vector(mode="numeric", length(p1gen$DAY));
+
+
+for (i in 1:max(p1gen$DAY)){
+  
+  for (j in seq(0, 24*15*4-15, 15)){
+    
+    if (length(p1sen$AMBIENT_TEMPERATURE[p1sen$DAY == i & p1sen$TIME == j])>0 & 
+        length(p1gen$DAY[p1gen$DAY == i & p1gen$TIME == j][1])>0){
+      
+      AMBIENT_TEMPERATURE[p1gen$DAY == i & p1gen$TIME == j] = 
+      p1sen$AMBIENT_TEMPERATURE[p1sen$DAY == i & p1sen$TIME == j];
+      MODULE_TEMPERATURE[p1gen$DAY == i & p1gen$TIME == j] = 
+      p1sen$MODULE_TEMPERATURE[p1sen$DAY == i & p1sen$TIME == j];
+      IRRADIATION[p1gen$DAY == i & p1gen$TIME == j] = 
+      p1sen$IRRADIATION[p1sen$DAY == i & p1sen$TIME == j];
+      
+    } else if (length(p1gen$DAY[p1gen$DAY == i & p1gen$TIME == j][1])>0){
+      
+      AMBIENT_TEMPERATURE[p1gen$DAY == i & p1gen$TIME == j] = 0;
+      MODULE_TEMPERATURE[p1gen$DAY == i & p1gen$TIME == j] = 0;
+      IRRADIATION[p1gen$DAY == i & p1gen$TIME == j] == 0;
+    }
+  }
+}
+
+
+p1gen$AMBIENT_TEMPERATURE <- as.numeric(AMBIENT_TEMPERATURE);
+p1gen$MODULE_TEMPERATURE <- as.numeric(MODULE_TEMPERATURE);
+p1gen$IRRADIATION <- as.numeric(IRRADIATION);
+
+#Attach Sensor Data for 2nd generator
+
+AMBIENT_TEMPERATURE <- vector(mode="numeric", length(p2gen$DAY));
+MODULE_TEMPERATURE <- vector(mode="numeric", length(p2gen$DAY));
+IRRADIATION <- vector(mode="numeric", length(p2gen$DAY));
+
+
+for (i in 1:max(p2gen$DAY)){
+  
+  for (j in seq(0, 24*15*4-15, 15)){
+    
+    if (length(p2sen$AMBIENT_TEMPERATURE[p2sen$DAY == i & p2sen$TIME == j])>0 & 
+        length(p2gen$DAY[p2gen$DAY == i & p2gen$TIME == j][1])>0){
+      
+      AMBIENT_TEMPERATURE[p2gen$DAY == i & p2gen$TIME == j] = 
+      p2sen$AMBIENT_TEMPERATURE[p2sen$DAY == i & p2sen$TIME == j];
+      MODULE_TEMPERATURE[p2gen$DAY == i & p2gen$TIME == j] = 
+      p2sen$MODULE_TEMPERATURE[p2sen$DAY == i & p2sen$TIME == j];
+      IRRADIATION[p2gen$DAY == i & p2gen$TIME == j] = 
+      p2sen$IRRADIATION[p2sen$DAY == i & p2sen$TIME == j];
+      
+    } else if (length(p2gen$DAY[p2gen$DAY == i & p2gen$TIME == j][1])>0){
+      
+      AMBIENT_TEMPERATURE[p2gen$DAY == i & p2gen$TIME == j] = 0;
+      MODULE_TEMPERATURE[p2gen$DAY == i & p2gen$TIME == j] = 0;
+      IRRADIATION[p2gen$DAY == i & p2gen$TIME == j] == 0;
+    }
+  }
+}
+
+
+p2gen$AMBIENT_TEMPERATURE <- as.numeric(AMBIENT_TEMPERATURE);
+p2gen$MODULE_TEMPERATURE <- as.numeric(MODULE_TEMPERATURE);
+p2gen$IRRADIATION <- as.numeric(IRRADIATION);
+
+
+
+```
+
+
+```{r detach zero irradiation from p1gen and p2gen }
+p1gen <- p1gen[p1gen$IRRADIATION != 0,]
+p2gen <- p2gen[p2gen$IRRADIATION != 0,]
+
+```
+
+
+
+```{r p1_by_time_df}
+
+#Attache dc power stat for each source to a day&time entry in p1sen, call new DF p1
+
+p1 = p1sen
+temp = matrix(0,length(p1$DAY),22)
+
+
+for (i in 1:max(p1sen$DAY)){
+  
+  for (j in seq(0, 24*15*4-15, 15)){
+      
+    for (k in 1:22){
+      
+      if (length(p1sen$DAY[p1sen$DAY == i & p1sen$TIME == j])>0 &
+          length(p1gen$DAY[p1gen$DAY == i & p1gen$TIME == j & p1gen$SOURCE == LETTERS[k]])>0){
+        
+        temp[p1sen$DAY == i & p1sen$TIME == j,k] = p1gen$DC_POWER[p1gen$DAY == i &            
+          p1gen$TIME == j & p1gen$SOURCE == LETTERS[k]];
+          
+      } else {
+        temp[p1sen$DAY == i & p1sen$TIME == j,k] = 0;
+      }
+        
+    }
+  }
+}
+
+p1$Adcp <- temp[,1];
+p1$Bdcp <- temp[,2];
+p1$Cdcp <- temp[,3];
+p1$Ddcp <- temp[,4];
+p1$Edcp <- temp[,5];
+p1$Fdcp <- temp[,6];
+p1$Gdcp <- temp[,7];
+p1$Hdcp <- temp[,8];
+p1$Idcp <- temp[,9];
+p1$Jdcp <- temp[,10];
+p1$Kdcp <- temp[,11];
+p1$Ldcp <- temp[,12];
+p1$Mdcp <- temp[,13];
+p1$Ndcp <- temp[,14];
+p1$Odcp <- temp[,15];
+p1$Pdcp <- temp[,16];
+p1$Qdcp <- temp[,17];
+p1$Rdcp <- temp[,18];
+p1$Sdcp <- temp[,19];
+p1$Tdcp <- temp[,20];
+p1$Udcp <- temp[,21];
+p1$Vdcp <- temp[,22];
+
+
+
+#Attache dc power stat for each source A-V to a day&time entry in p2sen, call new DF p2
+
+p2 = p2sen
+temp = matrix(0,length(p2$DAY),22)
+
+
+for (i in 1:max(p2sen$DAY)){
+  
+  for (j in seq(0, 24*15*4-15, 15)){
+      
+    for (k in 1:22){
+      
+      if (length(p2sen$DAY[p2sen$DAY == i & p2sen$TIME == j])>0 &
+        length(p2gen$DAY[p2gen$DAY == i & p2gen$TIME == j & p2gen$SOURCE == LETTERS[k]])>0){
+        
+        temp[p2sen$DAY == i & p2sen$TIME == j,k] = 
+          p2gen$DC_POWER[p2gen$DAY == i & p2gen$TIME == j & p2gen$SOURCE == LETTERS[k]];
+          
+      }
+    }
+  }
+}
+
+p2$Adcp <- temp[,1];
+p2$Bdcp <- temp[,2];
+p2$Cdcp <- temp[,3];
+p2$Ddcp <- temp[,4];
+p2$Edcp <- temp[,5];
+p2$Fdcp <- temp[,6];
+p2$Gdcp <- temp[,7];
+p2$Hdcp <- temp[,8];
+p2$Idcp <- temp[,9];
+p2$Jdcp <- temp[,10];
+p2$Kdcp <- temp[,11];
+p2$Ldcp <- temp[,12];
+p2$Mdcp <- temp[,13];
+p2$Ndcp <- temp[,14];
+p2$Odcp <- temp[,15];
+p2$Pdcp <- temp[,16];
+p2$Qdcp <- temp[,17];
+p2$Rdcp <- temp[,18];
+p2$Sdcp <- temp[,19];
+p2$Tdcp <- temp[,20];
+p2$Udcp <- temp[,21];
+p2$Vdcp <- temp[,22];
+
+```
+
+
+```{r remove zero power and irradiation entries}
+#temp = p1$IRRADIATION!=0;
+#for (i in 1:22){
+#  temp = temp & (p1[,i+5]!=0);
+#}
+#p1 <- p1[temp,];
+
+#temp = p2$IRRADIATION!=0;
+#for (i in 1:22){
+#  temp = temp & (p2[,i+5]!=0);
+#}
+#  p2 <- p2[temp,];
+```
+
+
+```{r separate zero power entries and zero iradiation entries}
+
+
+p1ni = p1[p1$IRRADIATION==0,]
+
+no.power = p1[,6]==0
+for (i in 2:22){
+  no.power = no.power | (p1[,i+5]==0);
+}
+p1np <- p1[no.power,];
+p1nz <- p1[!no.power & p1$IRRADIATION!=0,]
+
+p2ni = p2[p2$IRRADIATION==0,]
+
+no.power = p2[,6]==0
+for (i in 2:22){
+  no.power = no.power | (p2[,i+5]==0);
+}
+p2np <- p2[no.power,];
+p2nz <- p2[!no.power & p2$IRRADIATION!=0,]
+```
+
+
+
+
+
+
+

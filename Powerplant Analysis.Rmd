@@ -1,0 +1,330 @@
+---
+title: "Powerplant Analysis"
+author: "Daniel Lundstrom"
+output:
+  word_document: default
+  html_document: default
+  pdf_document: default
+---
+
+
+Here we attempt multiple fittings of irradiation vs 
+
+
+
+
+```{r fitting_dcp}
+
+# Creates plots of irradiation vs power output for different inverters.
+# Try linear and quadratic fits and compare R^2 values.
+
+RSS.lm1 = NULL;
+RSS.lm2 = NULL;
+TSS = NULL;
+r2.lm1 = NULL;
+r2.lm2 = NULL
+coeff.lm = NULL;
+
+for (i in 1:22){
+  plot(p1$IRRADIATION,p1[,i+5]);
+  
+  lm.fit=lm(p1[,i+5]~IRRADIATION+AMBIENT_TEMPERATURE,data=p1);
+  RSS.lm1[i] = mean((p1[,i+5]-predict(lm.fit,p1))^2);
+  points(p1$IRRADIATION,predict(lm.fit,p1),col="red")
+  
+  lm.fit=lm(p1[,i+5]~poly(IRRADIATION,2)+AMBIENT_TEMPERATURE,data=p1);
+  RSS.lm2[i] = mean((p1[,i+5]-predict(lm.fit,p1))^2);
+  points(p1$IRRADIATION,predict(lm.fit,p1),col="blue")
+  
+  TSS[i] = mean((p1[,i+5]-mean(p1[,i+5]))^2);
+  r2.lm1[i] = 1-RSS.lm1[i]/TSS[i];
+  r2.lm2[i] = 1-RSS.lm2[i]/TSS[i];
+}
+
+r2.lm2-r2.lm1
+
+# Try linear fit using all data from other power inverters (blue).
+
+for (i in 1:22){
+  plot(p1$IRRADIATION,p1[,i+5]);
+  
+  lm.fit=lm(p1[,i+5]~IRRADIATION+AMBIENT_TEMPERATURE,data=p1);
+  RSS.lm1[i] = mean((p1[,i+5]-predict(lm.fit,p1))^2);
+  points(p1$IRRADIATION,predict(lm.fit,p1),col="red")
+  
+  lm.fit=lm(as.formula(paste(colnames(p1)[i+5],"~.")),data=p1);
+  RSS.lm2[i] = mean((p1[,i+5]-predict(lm.fit,p1))^2);
+  points(p1$IRRADIATION,predict(lm.fit,p1),col="blue")
+  
+  TSS[i] = mean((p1[,i+5]-mean(p1[,i+5]))^2);
+  r2.lm1[i] = 1-RSS.lm1[i]/TSS[i];
+  r2.lm2[i] = 1-RSS.lm2[i]/TSS[i];
+}
+
+#using all other inverters raises R^2 significantly compared to quadratic fitting.
+r2.lm2-r2.lm1
+
+
+
+
+# illustrates that different inverters have different irradiation vs power curves.
+
+plot(p1$IRRADIATION, p1$Edcp, col="orange")
+points(p1$IRRADIATION, p1$Fdcp, col="black")
+
+
+```
+
+```{r 2nd degree fits with different predictors}
+# Investigation of relevant predictors to power output.
+# Irradiation and ambient temp seem to be the only relevant predictors
+
+RSS.mod1 = NULL;
+RSS.mod2 = NULL;
+RSS.mod3 = NULL;
+RSS.mod4 = NULL;
+RSS.lmod1 = NULL;
+RSS.lmod2 = NULL;
+RSS.lmod3 = NULL;
+RSS.lmod4 = NULL;
+TSS = NULL;
+r2.lm1 = NULL;
+r2.lm2 = NULL;
+r2.lm3 = NULL;
+r2.lm4 = NULL;
+r2.llm1 = NULL;
+r2.llm2 = NULL;
+r2.llm3 = NULL;
+r2.llm4 = NULL;
+
+coeff.lm = NULL;
+
+for (i in 1:22){
+  
+  x1 = model.matrix(as.formula(paste(colnames(p1nz)[i+5],"~poly(IRRADIATION,2)")),p1nz)[,-1];
+  y1 = p1nz[,i+5];
+  mod.fit1=cv.glmnet(x1,y1,type.measure = "mse",alpha=1);
+  RSS.lmod1[i] = mean((p1nz[,i+5]-predict(mod.fit1,s=mod.fit1$lambda.min,newx=x1))^2);
+  
+  x1 = model.matrix(as.formula(paste(colnames(p1nz)[i+5],"~poly(IRRADIATION,2)+AMBIENT_TEMPERATURE")),p1nz)[,-1];
+  y1 = p1nz[,i+5];
+  mod.fit1=cv.glmnet(x1,y1,type.measure = "mse",alpha=1);
+  RSS.lmod2[i] = mean((p1nz[,i+5]-predict(mod.fit1,s=mod.fit1$lambda.min,newx=x1))^2);
+  
+  x1 = model.matrix(as.formula(paste(colnames(p1nz)[i+5],"~poly(IRRADIATION,2)+MODULE_TEMPERATURE")),p1nz)[,-1];
+  y1 = p1nz[,i+5];
+  mod.fit1=cv.glmnet(x1,y1,type.measure = "mse",alpha=1);
+  RSS.lmod3[i] = mean((p1nz[,i+5]-predict(mod.fit1,s=mod.fit1$lambda.min,newx=x1))^2);
+  
+  x1 = model.matrix(as.formula(paste(colnames(p1nz)[i+5],"~poly(IRRADIATION,2)+AMBIENT_TEMPERATURE+MODULE_TEMPERATURE")),p1nz)[,-1];
+  y1 = p1nz[,i+5];
+  mod.fit1=cv.glmnet(x1,y1,type.measure = "mse",alpha=1);
+  RSS.lmod4[i] = mean((p1nz[,i+5]-predict(mod.fit1,s=mod.fit1$lambda.min,newx=x1))^2);
+  
+  
+  mod.fit1=lm(p1nz[,i+5]~poly(IRRADIATION,2),data=p1nz);
+  RSS.mod1[i] = mean((p1nz[,i+5]-predict(mod.fit1,p1nz))^2);
+  
+  mod.fit2=lm(p1nz[,i+5]~poly(IRRADIATION,2)+AMBIENT_TEMPERATURE,data=p1nz);
+  RSS.mod2[i] = mean((p1nz[,i+5]-predict(mod.fit2,p1nz))^2);
+  
+  mod.fit3=lm(p1nz[,i+5]~poly(IRRADIATION,2)+MODULE_TEMPERATURE,data=p1nz);
+  RSS.mod3[i] = mean((p1nz[,i+5]-predict(mod.fit3,p1nz))^2);
+  
+  mod.fit4=lm(p1nz[,i+5]~poly(IRRADIATION,2)+MODULE_TEMPERATURE+AMBIENT_TEMPERATURE,data=p1nz);
+  RSS.mod4[i] = mean((p1nz[,i+5]-predict(mod.fit4,p1nz))^2);
+  
+  
+  TSS[i] = mean((p1nz[,i+5]-mean(p1nz[,i+5]))^2);
+  r2.lm1[i] = 1-RSS.mod1[i]/TSS[i];
+  r2.lm2[i] = 1-RSS.mod2[i]/TSS[i];
+  r2.lm3[i] = 1-RSS.mod3[i]/TSS[i];
+  r2.lm4[i] = 1-RSS.mod4[i]/TSS[i];
+  r2.llm1[i] = 1-RSS.lmod1[i]/TSS[i];
+  r2.llm2[i] = 1-RSS.lmod2[i]/TSS[i];
+  r2.llm3[i] = 1-RSS.lmod3[i]/TSS[i];
+  r2.llm4[i] = 1-RSS.lmod4[i]/TSS[i];
+  
+
+}
+
+mean(r2.lm1)
+mean(r2.lm2)
+mean(r2.lm3)
+mean(r2.lm4)
+mean(r2.llm1)
+mean(r2.llm2)
+mean(r2.llm3)
+mean(r2.llm4)
+
+
+```
+
+
+```{r spline fitting}
+
+library(splines);
+RSS.mod1 = NULL;
+RSS.mod2 = NULL;
+RSS.mod3 = NULL;
+TSS = NULL;
+r2.spline1 = NULL;
+r2.spline2 = NULL;
+r2.spline3 = NULL;
+
+
+num.plots = 1;
+
+IRRlims = range(p1nz$IRRADIATION);
+IRR.grid = seq(from=IRRlims[1],to=IRRlims[2]);
+
+
+for (i in 1:1){
+
+  mod.fit1=lm(as.formula(paste(colnames(p1nz)[i+5],"~bs(IRRADIATION,knots=c(0.4,0.8))")),data=p1nz);
+  list(IRRADIATION = IRR.grid)
+  pred1 = predict(mod.fit1,newdata=list(IRRADIATION=p1nz$IRRADIATION),se=T);
+  RSS.mod1[i] = mean((p1nz[,i+5]-pred1$fit)^2);
+  
+  mod.fit2=lm(as.formula(paste(colnames(p1nz)[i+5],"~bs(IRRADIATION,knots=c(0.4,0.6,0.8))")),data=p1nz);
+  list(IRRADIATION = IRR.grid)
+  pred2 = predict(mod.fit2,newdata=list(IRRADIATION=p1nz$IRRADIATION),se=T);
+  RSS.mod2[i] = mean((p1nz[,i+5]-pred2$fit)^2);
+  
+  mod.fit3=lm(as.formula(paste(colnames(p1nz)[i+5],"~bs(IRRADIATION,knots=c(0.4,0.6,0.8,1))")),data=p1nz);
+  list(IRRADIATION = IRR.grid)
+  pred3 = predict(mod.fit3,newdata=list(IRRADIATION=p1nz$IRRADIATION),se=T);
+  RSS.mod3[i] = mean((p1nz[,i+5]-pred3$fit)^2);
+
+  TSS[i] = mean((p1nz[,i+5]-mean(p1nz[,i+5]))^2);
+  r2.spline1[i] = 1-RSS.mod1[i]/TSS[i];
+  r2.spline2[i] = 1-RSS.mod2[i]/TSS[i];
+  r2.spline3[i] = 1-RSS.mod3[i]/TSS[i];
+  
+  if (i <= num.plots){
+    plot(p1nz$IRRADIATION,p1nz[,i+5],main = paste("Ridge Regression Fits of",colnames(p1nz)[i+5], "with polynomial Irradiation"),     xlab = "Irradiation", ylab = "Direct Current Power");
+    points(p1nz$IRRADIATION,pred1$fit,col="red",pch=20)
+    points(p1nz$IRRADIATION,pred2$fit,col="blue",pch=20)
+    points(p1nz$IRRADIATION,pred3$fit,col="green",pch=20)
+    
+  }
+}
+
+mean(r2.spline1);
+mean(r2.spline2);
+mean(r2.spline3);
+
+var(r2.spline3)
+```
+
+
+
+```{r lasso fitting}
+
+library(glmnet);
+RSS.mod1 = NULL;
+RSS.mod2 = NULL;
+RSS.mod3 = NULL;
+TSS = NULL;
+r2.lasso1 = NULL;
+r2.lasso2 = NULL;
+r2.lasso3 = NULL;
+
+coeff.lm = NULL;
+num.plots =2;
+
+for (i in 1:22){
+  
+  #plot(p1nz$IRRADIATION,p1nz[,i+5],main = paste("Ridge Regression Fits of",colnames(p1nz)[i+5], "with polynomial Irradiation"),     xlab = "Irradiation", ylab = "Direct Current Power");
+  
+  x1 = model.matrix(as.formula(paste(colnames(p1nz)[i+5],"~poly(IRRADIATION,1)+AMBIENT_TEMPERATURE")),p1nz)[,-1];
+  y1 = p1nz[,i+5];
+  mod.fit1=cv.glmnet(x1,y1,type.measure = "mse",alpha=1);
+  RSS.mod1[i] = mean((p1nz[,i+5]-predict(mod.fit1,s=mod.fit1$lambda.min,newx=x1))^2);
+  #points(p1nz$IRRADIATION,predict(mod.fit1,s=mod.fit1$lambda.min,newx=x1),col="red",pch=20)
+  
+  x2 = model.matrix(as.formula(paste(colnames(p1nz)[i+5],"~poly(IRRADIATION,2)+AMBIENT_TEMPERATURE")),p1nz)[,-1];
+  y2 = p1nz[,i+5];
+  mod.fit2=cv.glmnet(x2,y2,type.measure = "mse",alpha=1);
+  RSS.mod2[i] = mean((p1nz[,i+5]-predict(mod.fit2,s=mod.fit2$lambda.min,newx=x2))^2);
+  #points(p1nz$IRRADIATION,predict(mod.fit2,s=mod.fit2$lambda.min,newx=x2),col="blue",pch=20)
+  
+  x3 = model.matrix(as.formula(paste(colnames(p1nz)[i+5],"~poly(IRRADIATION,3)+AMBIENT_TEMPERATURE")),p1nz)[,-1];
+  y3 = p1nz[,i+5];
+  mod.fit3=cv.glmnet(x3,y3,type.measure = "mse",alpha=1);
+  RSS.mod3[i] = mean((p1nz[,i+5]-predict(mod.fit3,s=mod.fit3$lambda.min,newx=x3))^2);
+  #points(p1nz$IRRADIATION,predict(mod.fit3,s=mod.fit3$lambda.min,newx=x3),col="green",pch=20)
+  
+  
+  TSS[i] = mean((p1nz[,i+5]-mean(p1nz[,i+5]))^2);
+  r2.lasso1[i] = 1-RSS.mod1[i]/TSS[i];
+  r2.lasso2[i] = 1-RSS.mod2[i]/TSS[i];
+  r2.lasso3[i] = 1-RSS.mod3[i]/TSS[i];
+  
+  if (i <= num.plots){
+    plot(p1nz$IRRADIATION,p1nz[,i+5],main = paste("Lasso Regression Fits of",colnames(p1nz)[i+5], "with polynomial Irradiation"),     xlab = "Irradiation", ylab = "Direct Current Power");
+  points(p1nz$IRRADIATION,predict(mod.fit1,s=mod.fit1$lambda.min,newx=x1),col="red",pch=20)
+  points(p1nz$IRRADIATION,predict(mod.fit2,s=mod.fit2$lambda.min,newx=x2),col="blue",pch=20)
+  #points(p1nz$IRRADIATION,predict(mod.fit3,s=mod.fit3$lambda.min,newx=x3),col="green",pch=20)
+  }
+  
+}
+  #third degree hugs pretty well
+  plot(p1nz$IRRADIATION,p1nz[,i+5],main = paste("Lasso Regression Fits of",colnames(p1nz)[i+5], "with polynomial Irradiation"),     xlab = "Irradiation", ylab = "Direct Current Power");
+  points(p1nz$IRRADIATION,predict(mod.fit3,s=mod.fit3$lambda.min,newx=x3),col="green",pch=20)
+
+mean(r2.lasso1)
+mean(r2.lasso2)
+mean(r2.lasso3)
+
+var(r2.lasso3)
+
+
+```
+
+
+```{r illustrations}
+
+#illustrates that higher temperatures cause an increase in variance.
+
+plot(p1$IRRADIATION[p1$AMBIENT_TEMPERATURE>28], p1$Adcp[p1$AMBIENT_TEMPERATURE>28],col="red")
+points(p1$IRRADIATION[p1$AMBIENT_TEMPERATURE<28], p1$Adcp[p1$AMBIENT_TEMPERATURE<28],col="blue")
+
+plot(p1gen$IRRADIATION[p1gen$AMBIENT_TEMPERATURE>29], p1gen$DC_POWER[p1gen$AMBIENT_TEMPERATURE>29],col="red")
+points(p1gen$IRRADIATION[p1gen$AMBIENT_TEMPERATURE<29], p1gen$DC_POWER[p1gen$AMBIENT_TEMPERATURE<29],col="blue")
+
+
+```
+
+
+
+
+```{r bag_of_holding}
+#plot(p1gen$IRRADIATION[p1gen$SOURCE == "A"], p1gen$DC_POWER[p1gen$SOURCE == "A"],col="blue")
+
+#points(p1gen$IRRADIATION[p1gen$SOURCE == "B"], p1gen$DC_POWER[p1gen$SOURCE == "B"],col="red")
+
+#points(p1gen$IRRADIATION[p1gen$SOURCE == "C"], p1gen$DC_POWER[p1gen$SOURCE == "C"], col="green")
+#points(p1gen$IRRADIATION[p1gen$SOURCE == "D"], p1gen$DC_POWER[p1gen$SOURCE == "D"], col="purple")
+
+#points(p1gen$IRRADIATION[p1gen$SOURCE == "E"], p1gen$DC_POWER[p1gen$SOURCE == "E"], col="black")
+
+#points(p1gen$IRRADIATION[p1gen$SOURCE == "F"], p1gen$DC_POWER[p1gen$SOURCE == "F"], col="orange")
+
+#plot(p1sen$TIME[p1sen$DAY == 1], p1sen$IRRADIATION[p1sen$DAY == 1],col="red")
+#plot(p1sen$TIME[p1sen$DAY == 2], p1sen$IRRADIATION[p1sen$DAY == 2],col="red")
+#plot(p1sen$TIME[p1sen$DAY == 3], p1sen$IRRADIATION[p1sen$DAY == 3],col="red")
+#plot(p1sen$TIME[p1sen$DAY == 4], p1sen$IRRADIATION[p1sen$DAY == 4],col="red")
+
+
+
+
+#plot(p1gen$IRRADIATION, p1gen$DC_POWER)
+#n=28
+#plot(p1gen$IRRADIATION[p1gen$AMBIENT_TEMPERATURE>n], p1gen$DC_POWER[p1gen$AMBIENT_TEMPERATURE>n],col="red")
+#length(p1gen$IRRADIATION[p1gen$AMBIENT_TEMPERATURE>n])
+#points(p1gen$IRRADIATION[p1gen$AMBIENT_TEMPERATURE<n], p1gen$DC_POWER[p1gen$AMBIENT_TEMPERATURE<n],col="blue")
+#length(p1gen$IRRADIATION[p1gen$AMBIENT_TEMPERATURE<n])
+
+```
+
