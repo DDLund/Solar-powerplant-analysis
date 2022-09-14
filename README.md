@@ -22,14 +22,22 @@ General results are as follows:
 ## Contents
 The work is written in R markdown. The contents are as folows:
 
-Cleans the data:
+Cleans the data -
 ```
 pp-clean-data.Rmd
 ```
 
-Investigates how to predict power-yield for a single time interval:
+Investigates how to predict power-yield for a single time interval -
 ```
 pp-power-regression.Rmd
 ```
 
+Forcasts daily power yield given irradiation measurements -
+```
+pp-yield-forcasting.Rmd
+```
 
+Identifies when low power-yeild occures, reports methods used to try to predict low power-yield, and investigates correlation of performance between different inverters -
+```
+pp-find-fail.Rmd
+```
