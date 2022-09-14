@@ -42,7 +42,7 @@ Forcasts daily power yield given irradiation measurements -
 pp-yield-forcasting.Rmd
 ```
 
-Identifies when low power-yeild occures, reports methods used to try to predict low power-yield, and investigates correlation of performance between different inverters -
+Identifies when low power-yield occures, reports methods used to try to predict low power-yield, and investigates correlation of performance between different inverters -
 ```
 pp-find-fail.Rmd
 ```
