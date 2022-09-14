@@ -1,0 +1,110 @@
+---
+title: "pp-yield-forcasting"
+author: "Daniel Lundstrom"
+date: "9/14/2022"
+output: html_document
+---
+
+```{r create forecaster}
+
+  p1y=p1gen;
+  p1y$YIELD <- rep(0,length(p1y$DAY));
+  for (i in 1:22){
+    data = p1y[p1y$SOURCE==LETTERS[i],];
+    l = length(data$DAY)
+    data$YIELD <- rep(0,l);
+    data$YIELD[1] = data$DAILY_YIELD[1];
+    data$YIELD[2:l] <- data$TOTAL_YIELD[2:l]-data$TOTAL_YIELD[1:(l-1)];
+    for (j in 2:l){
+      if(data$TIME[j-1] + 15 != data$TIME[j] & data$DAY[j]==data$DAY[j-1]){
+        data$YIELD[j] = 0;
+      }
+    }
+    p1y[p1y$SOURCE==LETTERS[i],] = data
+  }
+
+  p1y = p1y[p1y$YIELD != 0,]
+
+  
+```
+
+
+
+```{r find linear fits for power vs irratdiation}
+  
+RSS.lm1 = NULL;
+RSS.lm2 = NULL;
+TSS = NULL;
+r2.lm1 = NULL;
+r2.lm2 = NULL
+coeff.lm = NULL;
+
+IRRlims = range(p1nz$IRRADIATION);
+IRR.grid = seq(from=IRRlims[1],to=IRRlims[2]);
+
+for (i in 1:22){
+  
+  data = p1y[p1y$SOURCE == LETTERS[i],];
+  plot(data$IRRADIATION,data$YIELD,main="Quadratic Fit of YIELD by IRRADIATION for SOURCE C", xlab = "Irradiaiton", ylab = "Yield");
+  
+  lm.fit=lm(YIELD~poly(IRRADIATION,2),data=data);
+  RSS.lm1[i] = mean((data$YIELD-predict(lm.fit,data))^2);
+  points(data$IRRADIATION,predict(lm.fit,data),col="red",pch=20)
+  #print(summary(lm.fit))
+  
+  mod.fit2=lm(as.formula(YIELD~bs(IRRADIATION,knots=c(0.4,0.6,0.8,1))),data=data);
+  list(IRRADIATION = IRR.grid)
+  pred = predict(mod.fit2,newdata=list(IRRADIATION=data$IRRADIATION),se=T);
+  #points(data$IRRADIATION,pred$fit,col="blue");
+  RSS.lm2[i] = mean((data$YIELD-pred$fit)^2);
+  
+  TSS[i] = mean((data$YIELD-mean(data$YIELD))^2);
+  r2.lm1[i] = 1-RSS.lm1[i]/TSS[i];
+  r2.lm2[i] = 1-RSS.lm2[i]/TSS[i];
+}
+
+mean(r2.lm1)
+mean(r2.lm2)
+
+
+
+
+```
+
+```{r predicting powerplant yield given irradiation measurements}
+
+#Predicting power output given irradiation 
+
+pred.yield = NULL;
+total.yield = NULL;
+
+
+for (j in 1:max(p1y$DAY)){
+  train = p1y[p1y$DAY!=j,];
+  test = p1y[p1y$DAY==j,];
+  total.yield[j] = sum(test$YIELD);
+  pred.yield[j] = 0;
+  
+  for (i in 1:22){
+    
+    data = train[train$SOURCE == LETTERS[i],];
+    lm.fit=lm(YIELD~poly(IRRADIATION,2),data=data);
+    pred = predict(lm.fit,test[test$SOURCE == LETTERS[i],]);
+    pred.yield[j] = pred.yield[j] + sum(pred);
+    
+  }
+}
+
+# Leave-one-out cross validation for predicting day's yield
+
+plot(total.yield,pred.yield, main = "True Yield vs Predicted Yield in L-O-O-C-V", xlab = "true yield", ylab = "predicted yield")
+lines(c(0,200000),c(0,200000))
+
+RSS = mean((total.yield-pred.yield)^2);
+TSS = mean((total.yield-mean(total.yield))^2);
+
+R2 = 1-RSS/TSS;
+R2
+
+
+```
