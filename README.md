@@ -23,13 +23,13 @@ General results are as follows:
 The work is written in R markdown. The contents are as folows:
 
 Cleans the data:
-'''
+```
 pp-clean-data.Rmd
-'''
+```
 
 Investigates how to predict power-yield for a single time interval:
-'''
+```
 pp-power-regression.Rmd
-'''
+```
 
 
