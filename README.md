@@ -22,6 +22,11 @@ General results are as follows:
 ## Contents
 The work is written in R markdown. The contents are as folows:
 
+The data (power yields and weather sensors) -
+```
+Powerplant Data
+```
+
 Cleans the data (run first) -
 ```
 pp-clean-data.Rmd
