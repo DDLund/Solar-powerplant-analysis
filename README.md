@@ -22,7 +22,7 @@ General results are as follows:
 ## Contents
 The work is written in R markdown. The contents are as folows:
 
-Cleans the data -
+Cleans the data (run first) -
 ```
 pp-clean-data.Rmd
 ```
