@@ -27,7 +27,7 @@ General results are as follows:
 
 
 ## Contents
-The work is written in R markdown. Analysis is primarily on powerplant 1 data. For information on data structure, see [here](https://www.kaggle.com/datasets/anikannal/solar-power-generation-data). The contents of each R markdown file is as folows:
+The work is written in R markdown. Analysis is primarily on powerplant 1 data. For information on the data, see [here](https://www.kaggle.com/datasets/anikannal/solar-power-generation-data). The contents of each R markdown file is as folows:
 
 The data (power yields and weather sensors for two plants) -
 ```
