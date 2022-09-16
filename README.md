@@ -2,7 +2,7 @@
 
 This repository gives an analysis of 34 days of solar power plant data, as found at:
 
-> [Solar Power Generation Data](https://www.kaggle.com/datasets/anikannal/solar-power-generation-data) kaggle.com
+> [Solar Power Generation Data](https://www.kaggle.com/datasets/anikannal/solar-power-generation-data)
 
 ## Goal and Results
 
@@ -20,14 +20,14 @@ General results are as follows:
 Analysis is primarily on powerplant 1 data.
 
 ## Contents
-The work is written in R markdown. The contents are as folows:
+The work is written in R markdown. For information on data structure, see [here](https://www.kaggle.com/datasets/anikannal/solar-power-generation-data). The contents of each R markdown file is as folows:
 
 The data (power yields and weather sensors for two plants) -
 ```
 Powerplant Data
 ```
 
-Cleans the data (run first) -
+Cleans the data (run first, requires ~ 4 min) -
 ```
 pp-clean-data.Rmd
 ```
