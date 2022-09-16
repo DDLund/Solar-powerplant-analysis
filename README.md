@@ -12,12 +12,12 @@ The goal is to investigate the data to answer the following questions:
 2) Can we identify underperforming power inverters?
 3) Can we predict when a power inverter will underperform?
 
-Analysis is primaiely on powerplant 1 data.
-
 General results are as follows:
 1) We can accurately predict power generation given a days irradiation (sunlight intensity) measurements.
 2) We can identify when a power inverter underperforms based on current irradiation measurements.
 3) We cannot predict when an inverter will have an under-performning interval based on recent power performance.
+
+Analysis is primarily on powerplant 1 data.
 
 ## Contents
 The work is written in R markdown. The contents are as folows:
