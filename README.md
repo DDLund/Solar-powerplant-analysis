@@ -18,7 +18,7 @@ The goal is to investigate the data to answer the following questions:
 ## Results
 General results are as follows:
 
-###Predict Power Generation given Irradiation
+### Predict Power Generation given Irradiation
 
 
 ### Predict Yield Given a Day's Irradiation Measurements
