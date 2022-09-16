@@ -26,13 +26,13 @@ We find that among all weather measurements that can act as a predictor to an in
 ![](images/loocv.png)
 Using the quadratic regression, we can predict the 15-minute power yield of each inverter given an irradiation measurement. With this, we can predict total plant yield given a day's worth of irradiation measurements. Using Leave-One-Out-Cross-Validaiton, we get an $R^2$ of 0.983.
 
-
 ### Identify Inverter Underperformance
-
+![](images/residcurveC.png)
+We consider the residuals obtained by subtracting thre regression prediiton from the yield mesurements. We generously label under-performing yields as any yield that is three standard deviations below the mean. Above we give a picture of the fit in blue and low-power points in red.
 
 ### Predict when an Invdrter will Under-perform
-
-
+![](images/lagC.png)
+For each data point we identify the previous five residuals, called lag1,...,lag5. We then attempt to use the lags as a predictor of wheather the inverer will give low yield. The reasoning is that perhaps there is a dip or erratic fluctuation in performance before a low-power yield. Using lda, qda, glm, and knn, no method significantly predicted when a low-power yield would ocure. We attempt data-ballancing, to no effect. This indicates that recent performance is not an indicator of low-power yield.
 
 ## Contents
 The work is written in R markdown. Analysis is primarily on powerplant 1 data. For information on the data, see [here](https://www.kaggle.com/datasets/anikannal/solar-power-generation-data). The contents of each R markdown file is as folows:
