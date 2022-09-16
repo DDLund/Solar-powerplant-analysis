@@ -19,7 +19,7 @@ The goal is to investigate the data to answer the following questions:
 A full report with extra analysis can be found in ```Solar Panel Under-performance and Daily Yield Predictions based on Weather Forecasts.pdf```. General results are as follows:
 
 ### Predict Power Generation given Irradiation
-![](images/yfit.png)
+![](images/loocv.png)
 We find that among all weather measurements that can act as a predictor to an inverter's power generation, irradiation is the only significant predictor. We attempt polynomial, ridge, lasso, and spline regression, finding more advanced methods do not significantly improvement on quadratic regression, which has an average $R^2$ value among all inverters of 0.9762. We proceed buy using quadratic regression to model inverter power yeild as a funciton of irradiation.
 
 ### Predict Yield Given a Day's Irradiation Measurements
