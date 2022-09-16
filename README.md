@@ -24,6 +24,7 @@ We find that among all weather measurements that can act as a predictor to an in
 
 ### Predict Yield Given a Day's Irradiation Measurements
 ![](images/loocv.png)
+Using the quadratic regression, we can predict the 15-minute power yield of each inverter given an irradiation measurement. With this, we can predict total plant yield given a day's worth of irradiation measurements. Using Leave-One-Out-Cross-Validaiton, we get an $R^2$ of 0.983.
 
 
 ### Identify Inverter Underperformance
