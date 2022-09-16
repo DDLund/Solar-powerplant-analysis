@@ -30,7 +30,7 @@ Using the quadratic regression, we can predict the 15-minute power yield of each
 
 ### Identify Inverter Underperformance
 ![](images/residcurveC.png)
-We consider the residuals obtained by subtracting thre regression prediiton from the yield mesurements. We generously label under-performing yields as any yield that is three standard deviations below the mean. Above we give a picture of the fit in blue and low-power points in red.
+We consider the residuals obtained by subtracting the regression prediction from the yield mesurements. We generously label under-performing yields as any yield that is three standard deviations below the mean. Above we give a picture of the fit in blue and low-power points in red.
 
 ### Predict when an Inverter will Under-perform
 ![](images/lagplot.png)
