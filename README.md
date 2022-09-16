@@ -38,7 +38,7 @@ For each data point we identify the previous five residuals, called lag1,...,lag
 
 ### Odd Circumstances of Under-Performance
 ![](images/oddHists.png)
-We identified odd circumstances around low-yield (low-power) times that indicate the events are not random. It appears that low-power times are not distributed evenly among the days or times. There are some pairs of inverters that experience low-power simutaiously very often. 
+We identified odd circumstances around low-yield (low-power) times that indicate the events are not random. It appears that low-power times are not distributed evenly among the days or times. There are very few times when more than 10 inverters give low power simultaniously, and when multiple inverters give low power, it is usually only 2-4. However, there are some pairs of inverters that give low power together 10+ times. We also saw some inverters has very high residual correlations. This suggests that some inverters perform together, perhaps because they are close to each other in the plant or are connected by some sort of wiring.
 
 ## Contents
 The work is written in R markdown. Analysis is primarily on powerplant 1 data. For information on the data, see [here](https://www.kaggle.com/datasets/anikannal/solar-power-generation-data). The contents of each R markdown file is as folows:
