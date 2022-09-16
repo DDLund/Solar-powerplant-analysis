@@ -14,13 +14,20 @@ The goal is to investigate the data to answer the following questions:
 
 General results are as follows:
 1) We can accurately predict power generation given a days irradiation (sunlight intensity) measurements.
+
+
 2) We can identify when a power inverter underperforms based on current irradiation measurements.
+
+
 3) We cannot predict when an inverter will have an under-performing 15-min interval based on recent power performance.
 
-Analysis is primarily on powerplant 1 data.
+
+
+
+
 
 ## Contents
-The work is written in R markdown. For information on data structure, see [here](https://www.kaggle.com/datasets/anikannal/solar-power-generation-data). The contents of each R markdown file is as folows:
+The work is written in R markdown. Analysis is primarily on powerplant 1 data. For information on data structure, see [here](https://www.kaggle.com/datasets/anikannal/solar-power-generation-data). The contents of each R markdown file is as folows:
 
 The data (power yields and weather sensors for two plants) -
 ```
