@@ -36,6 +36,10 @@ We consider the residuals obtained by subtracting the regression prediction from
 ![](images/lagplot.png)
 For each data point we identify the previous five residuals, called lag1,...,lag5. We then attempt to use the lags as a predictor of wheather the inverer will give low yield. The reasoning is that perhaps there is a dip or erratic fluctuation in performance before a low-power yield. Using lda, qda, glm, and knn, no method significantly predicted when a low-power yield would ocure. We attempt data-ballancing, to no effect. This indicates that recent performance is not an indicator of low-power yield.
 
+### Odd Circumstances of Under-Performance
+![](images/oddHists.png)
+We identified odd circumstances around low-yield (low-power) times that indicate the events are not random. It appears that low-power times are not distributed evenly among the days or times. There are some pairs of inverters that experience low-power simutaiously very often. 
+
 ## Contents
 The work is written in R markdown. Analysis is primarily on powerplant 1 data. For information on the data, see [here](https://www.kaggle.com/datasets/anikannal/solar-power-generation-data). The contents of each R markdown file is as folows:
 
