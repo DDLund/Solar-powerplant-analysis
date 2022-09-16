@@ -322,20 +322,6 @@ p2$Vdcp <- temp[,22];
 ```
 
 
-```{r remove zero power and irradiation entries}
-#temp = p1$IRRADIATION!=0;
-#for (i in 1:22){
-#  temp = temp & (p1[,i+5]!=0);
-#}
-#p1 <- p1[temp,];
-
-#temp = p2$IRRADIATION!=0;
-#for (i in 1:22){
-#  temp = temp & (p2[,i+5]!=0);
-#}
-#  p2 <- p2[temp,];
-```
-
 
 ```{r separate zero power entries and zero iradiation entries}
 
